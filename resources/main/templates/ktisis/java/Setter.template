@@ -1,0 +1,6 @@
+    ${scope} Builder ${name}(${type} ${name})
+    {
+      this.${name} = ${name};
+      return this;
+    }
+  

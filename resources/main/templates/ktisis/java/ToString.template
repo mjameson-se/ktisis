@@ -1,0 +1,6 @@
+
+  @Override
+  public String toString()
+  {
+    return MoreObjects.toStringHelper(${name}.class)${to.string.parts}.toString();
+  }

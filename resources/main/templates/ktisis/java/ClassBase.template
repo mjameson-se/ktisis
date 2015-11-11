@@ -1,0 +1,18 @@
+#! {before_class}
+/** ${class_comment} */
+@{class}${scope} class ${name}${super_type_opt}
+{
+#! {begin_class}
+#! {class_fields}
+
+#! {before_ctor}
+  @{ctor}${scope} ${name}(${ctor_args})
+  {
+#! {class_ctor_body}
+  }
+	
+#! {getters} [1,1]
+#! {builder} [1,1]
+#! {end_class}
+}
+#! {after_class}

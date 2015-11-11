@@ -1,0 +1,6 @@
+#! {before_getter}
+  @{getter}${scope} ${type} ${getter_name}()
+  {
+    return ${return};
+  } 
+  

@@ -1,0 +1,10 @@
+  public static class Builder
+  {
+#! {builder_fields}
+
+#! {builder_setters}
+    public ${name} build()
+    {
+      return new ${name}(${builder_ctor_args});
+    }
+  }

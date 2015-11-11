@@ -1,0 +1,11 @@
+apply plugin: 'java'
+
+repositories {
+	mavenCentral() 
+}
+
+dependencies {
+	compile 'com.google.guava:guava:18.0'
+	testCompile 'junit:junit:4.11'
+	testCompile 'com.fasterxml.jackson.jr:jackson-jr-objects:2.5.3'
+}

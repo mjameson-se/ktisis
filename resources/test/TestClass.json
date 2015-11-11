@@ -1,0 +1,11 @@
+{
+	"name" : "TestClass",
+	"package" : "org.yesod.ktisis.test",
+	"class_comment" : "This is a test class",
+	"scope" : "public",
+	"fields" : [
+		{ "name" : "testField", "type" : "String", "default" : "\"test\"", "toString" : false },
+		{ "name" : "testOptional", "type" : "String", "optional" : true, "hashcode" : false },
+		{ "name" : "testBoolean", "type" : "Boolean", "equals" : false } 	
+	]
+}

@@ -1,0 +1,5 @@
+File comment for ${name}
+With multiple lines an such ${name} again
+And testing functions like toUpper: #{toUpper(${name})}
+And substr 1: #{substr(${name}, 2, 3)}
+And substr 0: #{substr(${name}, 2)}
