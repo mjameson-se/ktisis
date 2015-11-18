@@ -11,8 +11,8 @@
 #! {class_ctor_body}
   }
 	
-#! {getters} [1,1]
-#! {builder} [1,1]
+#! {getters}
+#! {builder}
 #! {end_class}
 }
 #! {after_class}

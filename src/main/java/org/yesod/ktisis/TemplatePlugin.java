@@ -1,10 +1,11 @@
 package org.yesod.ktisis;
 
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public interface TemplatePlugin
 {
-  String process(String line, VariableResolver context);
+  String process(Matcher match, VariableResolver context);
 
   Pattern pattern();
 }

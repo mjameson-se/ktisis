@@ -1,20 +1,19 @@
 package org.yesod.ktisis;
 
-import java.io.BufferedReader;
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
+import java.util.regex.Matcher;
 
-import com.google.common.base.Joiner;
+import com.google.common.base.Throwables;
+import com.google.common.io.CharStreams;
 
 public abstract class TemplateProcessor
 {
@@ -30,36 +29,36 @@ public abstract class TemplateProcessor
     plugins.clear();
   }
 
-  public static String processTemplate(String templateSource, VariableResolver variableResolver)
-  {
-    InputStream is = new ByteArrayInputStream(templateSource.getBytes(StandardCharsets.UTF_8));
-    return processTemplate(is, variableResolver);
-  }
-
   public static String processTemplate(InputStream templateSource,
                                        VariableResolver variableResolver)
   {
-    Collection<String> builder = new ArrayList<>();
-    BufferedReader reader = new BufferedReader(new InputStreamReader(templateSource, StandardCharsets.UTF_8));
-    reader.lines().forEach((line) ->
+    try
     {
-      String intermediate = line;
-      for (TemplatePlugin entry : plugins)
+      String templateString = CharStreams.toString(new InputStreamReader(templateSource));
+      return processTemplate(templateString, variableResolver);
+    }
+    catch (IOException ex)
+    {
+      throw Throwables.propagate(ex);
+    }
+  }
+
+  public static String processTemplate(String templateSource, VariableResolver variableResolver)
+  {
+    String intermediate = templateSource;
+    for (TemplatePlugin plugin : plugins)
+    {
+      StringBuffer buf = new StringBuffer();
+      Matcher mch = plugin.pattern().matcher(intermediate);
+      while (mch.find())
       {
-        if (entry.pattern().matcher(intermediate).find())
-        {
-          intermediate = entry.process(intermediate, variableResolver);
-        }
-        if (intermediate == null)
-        {
-          // Plugins are permitted to consume lines and return nothing
-          // This will often occur when there are no extensions loaded for an extension point.
-          break;
-        }
+        Optional<String> replace = Optional.ofNullable(plugin.process(mch, variableResolver));
+        mch.appendReplacement(buf, Matcher.quoteReplacement(replace.orElse("")));
       }
-      builder.add(intermediate);
-    });
-    return Joiner.on("\n").skipNulls().join(builder);
+      mch.appendTail(buf);
+      intermediate = buf.toString();
+    }
+    return intermediate;
   }
 
   public static InputStream getResource(String path, Class<?> ctx) throws IOException

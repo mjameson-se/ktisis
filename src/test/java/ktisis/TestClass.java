@@ -5,6 +5,7 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
+import java.util.regex.Matcher;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -36,6 +37,8 @@ public class TestClass
     TemplateProcessor.registerPlugin(new SubstitutionPlugin());
     TemplateProcessor.registerPlugin(new FunctionsPlugin());
     System.out.println(TemplateProcessor.processTemplate(is, JSON.std.mapFrom(fis)::get));
-    Assert.assertEquals(new FunctionsPlugin().process("#{toUpper(a)}", ImmutableMap.of("a", "b")::get), "A");
+    Matcher matcher = new FunctionsPlugin().pattern().matcher("#{toUpper(a)}");
+    Assert.assertTrue(matcher.find());
+    Assert.assertEquals(new FunctionsPlugin().process(matcher, ImmutableMap.of("a", "b")::get), "A");
   }
 }

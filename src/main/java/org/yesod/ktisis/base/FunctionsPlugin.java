@@ -55,18 +55,11 @@ public class FunctionsPlugin implements TemplatePlugin
   }
 
   @Override
-  public String process(String line, VariableResolver context)
+  public String process(Matcher match, VariableResolver context)
   {
-    Matcher match = matcher.matcher(line);
-    StringBuffer buf = new StringBuffer();
-    while (match.find())
-    {
-      String fn = match.group(1);
-      String args = TemplateProcessor.processTemplate(match.group(2), context);
-      match.appendReplacement(buf, Matcher.quoteReplacement(functions.get(fn).apply(args.split(", "), context)));
-    }
-    match.appendTail(buf);
-    return buf.toString();
+    String fn = match.group(1);
+    String args = TemplateProcessor.processTemplate(match.group(2), context);
+    return functions.get(fn).apply(args.split(", "), context);
   }
 
   @Override

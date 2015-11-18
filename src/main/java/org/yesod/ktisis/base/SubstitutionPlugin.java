@@ -13,18 +13,11 @@ public class SubstitutionPlugin implements TemplatePlugin
   private static final Pattern variablePattern = Pattern.compile("\\$\\{([\\w\\.]+)\\}");
 
   @Override
-  public String process(String input, VariableResolver variableLookup)
+  public String process(Matcher matcher, VariableResolver variableLookup)
   {
-    Matcher matcher = variablePattern.matcher(input);
-    StringBuffer buf = new StringBuffer();
-    while (matcher.find())
-    {
-      Object var = variableLookup.apply(matcher.group(1));
-      Preconditions.checkState(var != null, String.format("Variable %s was not supplied", matcher.group(1)));
-      matcher.appendReplacement(buf, Matcher.quoteReplacement(var.toString()));
-    }
-    matcher.appendTail(buf);
-    return buf.toString();
+    Object var = variableLookup.apply(matcher.group(1));
+    Preconditions.checkState(var != null, String.format("Variable %s was not supplied", matcher.group(1)));
+    return var.toString();
   }
 
   @Override

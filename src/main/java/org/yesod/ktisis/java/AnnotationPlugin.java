@@ -25,21 +25,14 @@ public class AnnotationPlugin implements TemplatePlugin
   }
 
   @Override
-  public String process(String line, VariableResolver context)
+  public String process(Matcher matcher, VariableResolver context)
   {
-    Matcher matcher = annotationMatcher.matcher(line);
-    StringBuffer buf = new StringBuffer();
-    while (matcher.find())
+    ArrayList<String> strs = new ArrayList<>();
+    for (Function<VariableResolver, String> annotation : annotations.get(matcher.group(1)))
     {
-      ArrayList<String> strs = new ArrayList<>();
-      for (Function<VariableResolver, String> annotation : annotations.get(matcher.group(1)))
-      {
-        strs.add(annotation.apply(context));
-      }
-      matcher.appendReplacement(buf, Matcher.quoteReplacement(Joiner.on(" ").skipNulls().join(strs)));
+      strs.add(annotation.apply(context));
     }
-    matcher.appendTail(buf);
-    return buf.toString();
+    return Joiner.on(" ").skipNulls().join(strs);
   }
 
   public void registerAnnotation(String position, String template)
