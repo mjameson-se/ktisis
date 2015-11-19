@@ -12,7 +12,6 @@ import org.yesod.ktisis.VariableResolver;
 import org.yesod.ktisis.base.ExtensionMethod.ExtensionPoint;
 
 import com.google.common.base.Joiner;
-import com.google.common.base.Preconditions;
 
 public class BasicBuilder
 {
@@ -37,12 +36,9 @@ public class BasicBuilder
 
   private String ctorArgs(VariableResolver variableResolver)
   {
-    List<?> fields = variableResolver.getAs("fields", List.class).orElse(null);
-    Preconditions.checkState(fields != null, "Trying to build a class without fields?");
     List<String> builder = new ArrayList<>();
-    for (Object field : fields)
+    for (Map<?, ?> fieldAttrs : ClassBase.getFieldsAndSuperFields(variableResolver))
     {
-      Map<?, ?> fieldAttrs = Map.class.cast(field);
       builder.add(fieldAttrs.get("name").toString());
     }
     return Joiner.on(", ").join(builder);
@@ -51,12 +47,9 @@ public class BasicBuilder
   @ExtensionPoint("builder_fields")
   public String builderFields(VariableResolver variableResolver)
   {
-    List<?> fields = variableResolver.getAs("fields", List.class).orElse(null);
-    Preconditions.checkState(fields != null, "Trying to build a class without fields?");
     Collection<String> lines = new ArrayList<>();
-    for (Object field : fields)
+    for (Map<?, ?> fieldAttrs : ClassBase.getFieldsAndSuperFields(variableResolver))
     {
-      Map<?, ?> fieldAttrs = Map.class.cast(field);
       String format = "    private ${type} ${name};";
       if (fieldAttrs.containsKey("default"))
       {
@@ -70,12 +63,9 @@ public class BasicBuilder
   @ExtensionPoint("builder_setters")
   public String builderSetters(VariableResolver variableResolver) throws IOException
   {
-    List<?> fields = variableResolver.getAs("fields", List.class).orElse(null);
-    Preconditions.checkState(fields != null, "Trying to build a class without fields?");
     Collection<String> lines = new ArrayList<>();
-    for (Object field : fields)
+    for (Map<?, ?> fieldAttrs : ClassBase.getFieldsAndSuperFields(variableResolver))
     {
-      Map<?, ?> fieldAttrs = Map.class.cast(field);
       try (InputStream template = TemplateProcessor.getResource("templates/ktisis/java/Setter.template", BasicBuilder.class))
       {
         lines.add(TemplateProcessor.processTemplate(template, VariableResolver.merge(fieldAttrs::get, variableResolver)));

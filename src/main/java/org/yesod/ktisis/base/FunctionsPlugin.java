@@ -1,5 +1,6 @@
 package org.yesod.ktisis.base;
 
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.BiFunction;
@@ -28,6 +29,7 @@ public class FunctionsPlugin implements TemplatePlugin
   {
     functions.put("toUpper", this::toUpper);
     functions.put("substr", this::substring);
+    functions.put("now", this::now);
   }
 
   public void registerFunction(String name, FunctionProvider fn)
@@ -39,6 +41,11 @@ public class FunctionsPlugin implements TemplatePlugin
   {
     String arg = TemplateProcessor.processTemplate(args[0], ctx);
     return arg.toUpperCase();
+  }
+
+  private String now(String[] args, VariableResolver ctx)
+  {
+    return LocalDateTime.now().toString();
   }
 
   private String substring(String[] args, VariableResolver ctx)

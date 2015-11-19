@@ -10,8 +10,8 @@ import java.util.Map;
 import org.yesod.ktisis.TemplateProcessor;
 import org.yesod.ktisis.VariableResolver;
 import org.yesod.ktisis.base.ExtensionMethod.ExtensionPoint;
+import org.yesod.ktisis.base.WhitespaceHelper;
 
-import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 
 public class ToStringExtension
@@ -22,6 +22,7 @@ public class ToStringExtension
     Collection<String> lines = new ArrayList<>();
     List<?> fields = variableResolver.getAs("fields", List.class).orElse(null);
     Preconditions.checkState(fields != null, "Trying to build a class without fields?");
+
     for (Object field : fields)
     {
       Map<?, ?> fieldAttrs = (Map<?, ?>) field;
@@ -31,19 +32,13 @@ public class ToStringExtension
         lines.add(String.format(".add(\"%s\", %s)", name, name));
       }
     }
-    VariableResolver inner = (s) ->
+    List<Map<?, ?>> superFields = ClassBase.getSuperFields(variableResolver);
+    if (!superFields.isEmpty())
     {
-      int len = lines.stream().mapToInt(String::length).sum();
-      if (len > 120)
-      {
-        String whitespace = "\n             ";
-        return whitespace + Joiner.on(whitespace).join(lines) + whitespace;
-      }
-      else
-      {
-        return Joiner.on("").join(lines);
-      }
-    };
+      lines.add(".add(\"super\", super.toString())");
+    }
+
+    VariableResolver inner = (s) -> WhitespaceHelper.joinWithWrapIfNecessary(lines, "", 13, 80);
     try (InputStream is = TemplateProcessor.getResource("templates/ktisis/java/ToString.template", getClass()))
     {
       return TemplateProcessor.processTemplate(is, VariableResolver.merge(variableResolver, inner));

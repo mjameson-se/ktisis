@@ -8,6 +8,7 @@
 #! {before_ctor}
   @{ctor}${scope} ${name}(${ctor_args})
   {
+#! {super_ctor_opt}
 #! {class_ctor_body}
   }
 	

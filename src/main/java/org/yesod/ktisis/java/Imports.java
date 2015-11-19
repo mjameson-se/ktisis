@@ -1,11 +1,10 @@
 package org.yesod.ktisis.java;
 
 import org.yesod.ktisis.VariableResolver;
-import org.yesod.ktisis.base.ExtensionMethod.ExtensionPoint;
 
 public class Imports
 {
-  @ExtensionPoint("imports")
+  // @ExtensionPoint("imports")
   public String writeImports(VariableResolver variableResolver)
   {
     return "";

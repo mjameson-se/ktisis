@@ -6,10 +6,12 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.yesod.ktisis.TemplateProcessor;
 import org.yesod.ktisis.VariableResolver;
 import org.yesod.ktisis.base.ExtensionMethod.ExtensionPoint;
+import org.yesod.ktisis.base.WhitespaceHelper;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
@@ -42,7 +44,7 @@ public class ClassBase
   public static List<Map<?, ?>> getFieldsAndSuperFields(VariableResolver ctx)
   {
     Builder<Map<?, ?>> builder = ImmutableList.builder();
-    return builder.addAll(getFields(ctx)).addAll(getSuperFields(ctx)).build();
+    return builder.addAll(getSuperFields(ctx)).addAll(getFields(ctx)).build();
   }
 
   @ExtensionPoint("class")
@@ -52,23 +54,23 @@ public class ClassBase
     {
       ImmutableMap<?, ?> subParts = ImmutableMap.builder().put("ctor_args", ctorArgs(variableResolver))
           .put("super_type_opt", superTypeOpt(variableResolver))
+          .put("super_ctor_opt", superCtorOpt(variableResolver))
           .build();
       VariableResolver subResolver = VariableResolver.merge(subParts::get, variableResolver);
       return TemplateProcessor.processTemplate(template, subResolver);
     }
   }
 
-  private String ctorArgs(VariableResolver variableResolver)
+  private String ctorArgs(VariableResolver ctx)
   {
-    List<?> fields = variableResolver.getAs("fields", List.class).orElse(null);
-    Preconditions.checkState(fields != null, "Trying to build a class without fields?");
     List<String> builder = new ArrayList<>();
-    for (Object field : fields)
+    for (Object field : getFieldsAndSuperFields(ctx))
     {
       Map<?, ?> fieldAttrs = (Map<?, ?>) field;
-      builder.add(TemplateProcessor.processTemplate("@{ctor_arg}${type} ${name}", VariableResolver.merge(fieldAttrs::get, variableResolver)));
+      builder.add(TemplateProcessor.processTemplate("@{ctor_arg}${type} ${name}", VariableResolver.merge(fieldAttrs::get, ctx)));
     }
-    return Joiner.on(", ").join(builder);
+    int column = WhitespaceHelper.length(ctx.apply("name"), ctx.apply("scope")) + 4;
+    return WhitespaceHelper.joinWithWrapIfNecessary(builder, ", ", column, 120);
   }
 
   private String superTypeOpt(VariableResolver variableResolver)
@@ -79,6 +81,18 @@ public class ClassBase
       return "";
     }
     return String.format(" extends %s", superdef.get("name"));
+  }
+
+  @ExtensionPoint("super_ctor_opt")
+  public String superCtorOpt(VariableResolver ctx)
+  {
+    List<Map<?, ?>> superFields = getSuperFields(ctx);
+    if (superFields.isEmpty())
+    {
+      return null;
+    }
+    String args = superFields.stream().map((f) -> (String) f.get("name")).collect(Collectors.joining(", "));
+    return String.format("    super(%s);", args);
   }
 
   @ExtensionPoint("class_ctor_body")
@@ -149,6 +163,11 @@ public class ClassBase
     Collection<String> lines = new ArrayList<>();
     List<?> fields = variableResolver.getAs("fields", List.class).orElse(null);
     Preconditions.checkState(fields != null, "Trying to build a class without fields?");
+    List<Map<?, ?>> superFields = getSuperFields(variableResolver);
+    if (!superFields.isEmpty())
+    {
+      lines.add("super.hashCode()");
+    }
     for (Object field : fields)
     {
       Map<?, ?> fieldAttrs = (Map<?, ?>) field;
@@ -157,18 +176,8 @@ public class ClassBase
         lines.add(fieldAttrs.get("name").toString());
       }
     }
-    VariableResolver inner = (s) ->
-    {
-      int len = lines.stream().mapToInt(String::length).sum();
-      if (len > 120)
-      {
-        return Joiner.on(",\n             ").join(lines);
-      }
-      else
-      {
-        return Joiner.on(", ").join(lines);
-      }
-    };
+    String hashCodeBody = WhitespaceHelper.joinWithWrapIfNecessary(lines, ", ", 13, 120);
+    VariableResolver inner = (s) -> hashCodeBody;
     try (InputStream is = TemplateProcessor.getResource("templates/ktisis/java/HashCode.template", getClass()))
     {
       return TemplateProcessor.processTemplate(is, inner);
@@ -181,6 +190,11 @@ public class ClassBase
     Collection<String> lines = new ArrayList<>();
     List<?> fields = variableResolver.getAs("fields", List.class).orElse(null);
     Preconditions.checkState(fields != null, "Trying to build a class without fields?");
+    List<Map<?, ?>> superFields = getSuperFields(variableResolver);
+    if (!superFields.isEmpty())
+    {
+      lines.add("super.equals(that)");
+    }
     for (Object field : fields)
     {
       Map<?, ?> fieldAttrs = (Map<?, ?>) field;
@@ -190,18 +204,9 @@ public class ClassBase
         lines.add(String.format("Objects.equals(this.%s, that.%s)", name, name));
       }
     }
-    VariableResolver inner = (s) ->
-    {
-      int len = lines.stream().mapToInt(String::length).sum();
-      if (len > 120)
-      {
-        return Joiner.on("\n             && ").join(lines);
-      }
-      else
-      {
-        return Joiner.on(" && ").join(lines);
-      }
-    };
+    String equalsBody = WhitespaceHelper.joinWithWrapIfNecessary(lines, "", " && ", 10, 120);
+    VariableResolver inner = (s) -> equalsBody;
+
     try (InputStream is = TemplateProcessor.getResource("templates/ktisis/java/Equals.template", getClass()))
     {
       return TemplateProcessor.processTemplate(is, VariableResolver.merge(variableResolver, inner));

@@ -20,7 +20,7 @@ import com.google.common.collect.ListMultimap;
 
 public class ExtensionRegistry implements TemplatePlugin
 {
-  private static final Pattern extensionMatcher = Pattern.compile("^#! \\{(\\S*)\\}\\s*$", Pattern.MULTILINE);
+  private static final Pattern extensionMatcher = Pattern.compile("^#! \\{(\\S*)\\}\\R{0,1}", Pattern.MULTILINE);
 
   private ListMultimap<String, ExtensionMethod> extensionPoints = ArrayListMultimap.create();
 
@@ -73,7 +73,7 @@ public class ExtensionRegistry implements TemplatePlugin
     {
       builder.add(extMethod.process(variableLookup));
     }
-    return builder.isEmpty() ? null : Joiner.on("\n").join(builder);
+    return builder.isEmpty() ? null : Joiner.on(System.lineSeparator()).join(builder) + System.lineSeparator();
   }
 
   @Override

@@ -7,5 +7,12 @@
 		{ "name" : "testField", "type" : "String", "default" : "\"test\"", "toString" : false },
 		{ "name" : "testOptional", "type" : "String", "optional" : true, "hashcode" : false },
 		{ "name" : "testBoolean", "type" : "Boolean", "equals" : false } 	
-	]
+	],
+	"supertype" : {
+		"name" : "TestSuperClass",
+		"fields" : [
+		 { "name" : "superTest", "type" : "Boolean", "default" : true },
+		 { "name" : "superTwo", "type" : "String" }
+		]
+	}
 }
