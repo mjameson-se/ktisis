@@ -2,6 +2,15 @@
   {
 #! {builder_fields}
 
+    public Builder()
+    {
+    }
+    
+    public Builder(${name} original)
+    {
+#! {copy_body}
+    }
+
 #! {builder_setters}
     public ${name} build()
     {

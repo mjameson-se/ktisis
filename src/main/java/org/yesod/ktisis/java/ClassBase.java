@@ -129,6 +129,11 @@ public class ClassBase
     return Joiner.on("\n").join(lines);
   }
 
+  public static String getterName(String name, String type)
+  {
+    return String.format("%s%s%s", type.equals("Boolean") ? "is" : "get", name.substring(0, 1).toUpperCase(), name.substring(1));
+  }
+
   @ExtensionPoint("getters")
   public String writeClassGetters(VariableResolver variableResolver) throws IOException
   {
@@ -141,7 +146,7 @@ public class ClassBase
       String name = fieldAttrs.get("name").toString();
       String type = fieldAttrs.get("type").toString();
       boolean isOptional = fieldAttrs.get("optional") == Boolean.TRUE;
-      String getterName = String.format("%s%s%s", type.equals("Boolean") ? "is" : "get", name.substring(0, 1).toUpperCase(), name.substring(1));
+      String getterName = getterName(name, type);
       String returnType = isOptional ? String.format("Optional<%s>", type) : type;
       String returnStr = isOptional ? String.format("Optional.fromNullable(%s)", name) : name;
       Map<?, ?> overrides = ImmutableMap.builder()

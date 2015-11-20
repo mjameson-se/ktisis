@@ -15,6 +15,9 @@ import com.google.common.base.Joiner;
 
 public class BasicBuilder
 {
+  // TODO: copy builder
+  // TODO: collectors
+
   @ExtensionPoint("builder")
   public String builder(VariableResolver variableResolver) throws IOException
   {
@@ -69,6 +72,35 @@ public class BasicBuilder
       try (InputStream template = TemplateProcessor.getResource("templates/ktisis/java/Setter.template", BasicBuilder.class))
       {
         lines.add(TemplateProcessor.processTemplate(template, VariableResolver.merge(fieldAttrs::get, variableResolver)));
+      }
+    }
+    return Joiner.on("\n").join(lines);
+  }
+
+  @ExtensionPoint("copy_body")
+  public String copyBuilder(VariableResolver ctx)
+  {
+    Collection<String> lines = new ArrayList<>();
+    for (Map<?, ?> fieldAttrs : ClassBase.getFieldsAndSuperFields(ctx))
+    {
+      String name = (String) fieldAttrs.get("name");
+      String type = (String) fieldAttrs.get("type");
+      boolean optional = fieldAttrs.get("optional") == Boolean.TRUE;
+      if (optional)
+      {
+        String def = (String) fieldAttrs.get("default");
+        if (def != null)
+        {
+          lines.add(String.format("      this.%s = original.%s().or(%s);", name, ClassBase.getterName(name, type), def));
+        }
+        else
+        {
+          lines.add(String.format("      this.%s = original.%s().orNull();", name, ClassBase.getterName(name, type), def));
+        }
+      }
+      else
+      {
+        lines.add(String.format("      this.%s = original.%s();", name, ClassBase.getterName(name, type)));
       }
     }
     return Joiner.on("\n").join(lines);
