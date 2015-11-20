@@ -1,18 +1,18 @@
-  public static class Builder
+  ${scope} static class Builder
   {
 #! {builder_fields}
 
-    public Builder()
+    ${scope} Builder()
     {
     }
     
-    public Builder(${name} original)
+    ${scope} Builder(${name} original)
     {
 #! {copy_body}
     }
 
 #! {builder_setters}
-    public ${name} build()
+    ${scope} ${name} build()
     {
       return new ${name}(${builder_ctor_args});
     }

@@ -7,7 +7,7 @@
       return true;
     }
 
-    if (!other instanceof ${name})
+    if (!(other instanceof ${name}))
     {
        return false;
     }

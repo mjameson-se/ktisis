@@ -6,7 +6,9 @@
 	"fields" : [
 		{ "name" : "testField", "type" : "String", "default" : "\"test\"", "toString" : false },
 		{ "name" : "testOptional", "type" : "String", "optional" : true, "hashcode" : false },
-		{ "name" : "testBoolean", "type" : "Boolean", "equals" : false } 	
+		{ "name" : "testBoolean", "type" : "Boolean", "equals" : false },
+		{ "name" : "testSet", "type" : "Set<Integer>", "collector" : true },
+		{ "name" : "testMap", "type" : "Map<String, Integer>", "collector" : true }
 	],
 	"supertype" : {
 		"name" : "TestSuperClass",

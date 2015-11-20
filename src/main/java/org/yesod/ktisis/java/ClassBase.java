@@ -47,6 +47,16 @@ public class ClassBase
     return builder.addAll(getSuperFields(ctx)).addAll(getFields(ctx)).build();
   }
 
+  public static boolean isOptional(Map<?, ?> field)
+  {
+    return isOptional(field::get);
+  }
+
+  public static boolean isOptional(VariableResolver fieldCtx)
+  {
+    return fieldCtx.getAs("optional", Boolean.class).orElse(null) == Boolean.TRUE;
+  }
+
   @ExtensionPoint("class")
   public String writeClass(VariableResolver variableResolver) throws IOException
   {
@@ -105,7 +115,7 @@ public class ClassBase
     {
       Map<?, ?> fieldAttrs = Map.class.cast(field);
       VariableResolver merge = VariableResolver.merge(fieldAttrs::get, variableResolver);
-      if (merge.getAs("optional", Boolean.class).orElse(Boolean.FALSE) == Boolean.FALSE)
+      if (!isOptional(fieldAttrs))
       {
         lines.add(TemplateProcessor.processTemplate("Preconditions.checkNotNull(${name}, \"${name} (${type}) is a required field\");", merge));
       }
@@ -129,9 +139,14 @@ public class ClassBase
     return Joiner.on("\n").join(lines);
   }
 
+  public static String upcase(String name)
+  {
+    return name.substring(0, 1).toUpperCase() + name.substring(1);
+  }
+
   public static String getterName(String name, String type)
   {
-    return String.format("%s%s%s", type.equals("Boolean") ? "is" : "get", name.substring(0, 1).toUpperCase(), name.substring(1));
+    return String.format("%s%s", type.equals("Boolean") ? "is" : "get", upcase(name));
   }
 
   @ExtensionPoint("getters")
@@ -145,7 +160,7 @@ public class ClassBase
       Map<?, ?> fieldAttrs = Map.class.cast(field);
       String name = fieldAttrs.get("name").toString();
       String type = fieldAttrs.get("type").toString();
-      boolean isOptional = fieldAttrs.get("optional") == Boolean.TRUE;
+      boolean isOptional = isOptional(fieldAttrs);
       String getterName = getterName(name, type);
       String returnType = isOptional ? String.format("Optional<%s>", type) : type;
       String returnStr = isOptional ? String.format("Optional.fromNullable(%s)", name) : name;
@@ -206,7 +221,7 @@ public class ClassBase
       if (fieldAttrs.get("equals") != Boolean.FALSE)
       {
         String name = fieldAttrs.get("name").toString();
-        lines.add(String.format("Objects.equals(this.%s, that.%s)", name, name));
+        lines.add(String.format("Objects.equal(this.%s, that.%s)", name, name));
       }
     }
     String equalsBody = WhitespaceHelper.joinWithWrapIfNecessary(lines, "", " && ", 10, 120);

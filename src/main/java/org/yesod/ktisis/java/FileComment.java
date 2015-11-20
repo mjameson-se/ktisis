@@ -33,7 +33,7 @@ public class FileComment
       {
         lines.add(TemplateProcessor.processTemplate(line, variableResolver));
       });
-      lines.add("/");
+      lines.add("*/");
       return Joiner.on("\n * ").skipNulls().join(lines);
     }
   }

@@ -30,6 +30,13 @@ public class FunctionsPlugin implements TemplatePlugin
     functions.put("toUpper", this::toUpper);
     functions.put("substr", this::substring);
     functions.put("now", this::now);
+    functions.put("upcase", this::upcase);
+  }
+
+  public String upcase(String[] args, VariableResolver ctx)
+  {
+    String name = args[0];
+    return name.substring(0, 1).toUpperCase() + name.substring(1);
   }
 
   public void registerFunction(String name, FunctionProvider fn)

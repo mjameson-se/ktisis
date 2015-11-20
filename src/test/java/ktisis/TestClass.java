@@ -31,8 +31,8 @@ public class TestClass
     extensionPlugin.loadPackage("org.yesod.ktisis.java");
     TemplateProcessor.registerPlugin(extensionPlugin);
     AnnotationPlugin annotationPlugin = new AnnotationPlugin();
-    annotationPlugin.registerAnnotation("field", "@Field(${type}) ");
-    annotationPlugin.registerAnnotation("ctor_arg", "@Arg(${name}) ");
+    annotationPlugin.registerAnnotation("field", "@Field(\"${type}\") ");
+    annotationPlugin.registerAnnotation("ctor_arg", "@Arg(\"${name}\") ");
     TemplateProcessor.registerPlugin(annotationPlugin);
     TemplateProcessor.registerPlugin(new SubstitutionPlugin());
     TemplateProcessor.registerPlugin(new FunctionsPlugin());
