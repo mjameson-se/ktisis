@@ -11,6 +11,7 @@ import org.yesod.ktisis.TemplateProcessor;
 import org.yesod.ktisis.VariableResolver;
 import org.yesod.ktisis.base.ExtensionMethod.ExtensionPoint;
 import org.yesod.ktisis.base.WhitespaceHelper;
+import org.yesod.ktisis.base.WhitespaceHelperConfig;
 
 import com.google.common.base.Preconditions;
 
@@ -38,7 +39,11 @@ public class ToStringExtension
       lines.add(".add(\"super\", super.toString())");
     }
 
-    VariableResolver inner = (s) -> WhitespaceHelper.joinWithWrapIfNecessary(lines, "", 13, 80);
+    WhitespaceHelperConfig cfg = new WhitespaceHelperConfig.Builder().wrappedIndent(22)
+                                                                     .extraNewlinesIfWrapped(true)
+                                                                     .lineLength(80)
+                                                                     .build();
+    VariableResolver inner = (s) -> WhitespaceHelper.join(cfg, lines);
     try (InputStream is = TemplateProcessor.getResource("templates/ktisis/java/ToString.template", getClass()))
     {
       return TemplateProcessor.processTemplate(is, VariableResolver.merge(variableResolver, inner));

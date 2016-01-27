@@ -2,6 +2,7 @@ package org.yesod.reflection;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.util.Arrays;
 import java.util.concurrent.ExecutionException;
 import java.util.function.Function;
@@ -15,6 +16,7 @@ import com.google.common.cache.LoadingCache;
 
 public class MethodStream
 {
+  private static LoadingCache<Class<?>, Object> instanceCache = CacheBuilder.newBuilder().build(CacheLoader.from(MethodStream::newInstance));
   private Stream<Method> methods;
 
   public MethodStream(Stream<Method> methods)
@@ -22,7 +24,7 @@ public class MethodStream
     this.methods = methods;
   }
 
-  private Object newInstance(Class<?> c)
+  private static Object newInstance(Class<?> c)
   {
     try
     {
@@ -36,17 +38,22 @@ public class MethodStream
 
   public MethodStream withAnnotation(Class<? extends Annotation> a)
   {
-    return new MethodStream(methods.filter((m) -> m.isAnnotationPresent(a)));
+    return withFilter(m -> m.isAnnotationPresent(a));
   }
 
   public MethodStream withParameterTypes(Class<?>... classes)
   {
-    return new MethodStream(methods.filter((m) -> Arrays.deepEquals(m.getParameterTypes(), classes)));
+    return withFilter(m -> Arrays.deepEquals(m.getParameterTypes(), classes));
+  }
+
+  public MethodStream publicOnly()
+  {
+    return withFilter(m -> Modifier.isPublic(m.getModifiers()));
   }
 
   public MethodStream withReturnType(Class<?> clazz)
   {
-    return new MethodStream(methods.filter((m) -> clazz == m.getReturnType()));
+    return withFilter(m -> clazz == m.getReturnType());
   }
 
   public MethodStream withFilter(Predicate<Method> filter)
@@ -56,7 +63,6 @@ public class MethodStream
 
   public <X, Y> Stream<InterfaceWrapper<Y>> asInterface(Function<BoundMethod<X>, Y> transform)
   {
-    LoadingCache<Class<?>, Object> instanceCache = CacheBuilder.newBuilder().build(CacheLoader.from(this::newInstance));
     Function<Method, BoundMethod<X>> i = (m) ->
     {
       try

@@ -99,7 +99,7 @@ public class ClassBase
     List<Map<?, ?>> superFields = getSuperFields(ctx);
     if (superFields.isEmpty())
     {
-      return null;
+      return "";
     }
     String args = superFields.stream().map((f) -> (String) f.get("name")).collect(Collectors.joining(", "));
     return String.format("    super(%s);", args);

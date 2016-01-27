@@ -2,29 +2,38 @@ package org.yesod.reflection;
 
 import java.lang.annotation.Annotation;
 import java.util.Arrays;
+import java.util.Set;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
+import com.google.common.collect.ImmutableSet;
 
 public class ClassStream
 {
-  private Stream<Class<?>> stream;
+  private Set<Class<?>> set;
+
+  public ClassStream(Class<?> clazz)
+  {
+    set = ImmutableSet.of(clazz);
+  }
 
   public ClassStream(Stream<Class<?>> stream)
   {
-    this.stream = stream;
+    this.set = stream.collect(Collectors.toSet());
   }
 
   public ClassStream withSuperclass(Class<?> superclass)
   {
-    return new ClassStream(stream.filter((c) -> superclass.isAssignableFrom(c)));
+    return new ClassStream(set.stream().filter((c) -> superclass.isAssignableFrom(c)));
   }
 
   public ClassStream withAnnotation(Class<? extends Annotation> annotation)
   {
-    return new ClassStream(stream.filter((c) -> c.isAnnotationPresent(annotation)));
+    return new ClassStream(set.stream().filter((c) -> c.isAnnotationPresent(annotation)));
   }
 
   public MethodStream mapMethods()
   {
-    return new MethodStream(stream.flatMap((c) -> Arrays.stream(c.getMethods())));
+    return new MethodStream(set.stream().flatMap((c) -> Arrays.stream(c.getMethods())));
   }
 }

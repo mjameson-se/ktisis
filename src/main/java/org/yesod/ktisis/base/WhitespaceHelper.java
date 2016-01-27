@@ -5,6 +5,7 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import com.google.common.base.Joiner;
+import com.google.common.collect.ImmutableList;
 
 public class WhitespaceHelper
 {
@@ -15,9 +16,12 @@ public class WhitespaceHelper
 
   public static String joinWithWrapIfNecessary(Collection<String> parts, String joinPre, String joinPost, int column, int limit)
   {
-    int total = parts.stream().mapToInt(String::length).sum() + (joinPost.length() + joinPre.length()) * (parts.size() - 1);
-    String ws = total > limit ? System.lineSeparator() + spaces(column) : "";
-    return Joiner.on(joinPre + ws + joinPost).skipNulls().join(parts);
+    WhitespaceHelperConfig cfg = new WhitespaceHelperConfig.Builder().preJoin(joinPre)
+                                                                     .postJoin(joinPost)
+                                                                     .lineLength(limit)
+                                                                     .wrappedIndent(column)
+                                                                     .build();
+    return join(cfg, parts);
   }
 
   public static String spaces(int count)
@@ -36,5 +40,20 @@ public class WhitespaceHelper
       }
     }
     return len;
+  }
+
+  public static String join(WhitespaceHelperConfig config, Collection<String> parts)
+  {
+    int total = parts.stream().mapToInt(String::length).sum() + (config.getPostJoin().length() + config.getPreJoin().length()) * (parts.size() - 1);
+    if (total > config.getLineLength())
+    {
+      String ws = System.lineSeparator() + spaces(config.getWrappedIndent());
+      if (config.isExtraNewlinesIfWrapped())
+      {
+        parts = ImmutableList.<String> builder().add("").addAll(parts).add("").build();
+      }
+      return Joiner.on(config.getPreJoin() + ws + config.getPostJoin()).skipNulls().join(parts);
+    }
+    return Joiner.on(config.getPreJoin() + config.getPostJoin()).skipNulls().join(parts);
   }
 }
