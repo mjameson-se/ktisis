@@ -10,3 +10,11 @@ dependencies {
 	testCompile 'junit:junit:4.11'
 	testCompile 'com.fasterxml.jackson.jr:jackson-jr-objects:2.5.3'
 }
+
+sourceSets {
+  main {
+    resources {
+      srcDirs = ["resources/main"]
+    }
+  }
+}
