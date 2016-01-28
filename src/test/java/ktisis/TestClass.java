@@ -5,9 +5,7 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
-import java.util.regex.Matcher;
 
-import org.junit.Assert;
 import org.junit.Test;
 import org.yesod.ktisis.TemplateProcessor;
 import org.yesod.ktisis.VariableResolver;
@@ -20,7 +18,6 @@ import org.yesod.reflection.ClassStream;
 import org.yesod.reflection.ClasspathSearch;
 
 import com.fasterxml.jackson.jr.ob.JSON;
-import com.google.common.collect.ImmutableMap;
 
 public class TestClass
 {
@@ -39,9 +36,6 @@ public class TestClass
     TemplateProcessor.loadAll(new ClassStream(AnnotationStuff.class));
 
     System.out.println(TemplateProcessor.processTemplate(is, JSON.std.mapFrom(fis)::get));
-    Matcher matcher = new FunctionsPlugin().pattern().matcher("#{toUpper(a)}");
-    Assert.assertTrue(matcher.find());
-    Assert.assertEquals(new FunctionsPlugin().process(matcher, ImmutableMap.of("a", "b")::get), "A");
   }
 
   public static class AnnotationStuff

@@ -52,7 +52,7 @@ public class ExtensionRegistry implements TemplatePlugin
     {
       builder.add(extMethod.process(variableLookup));
     }
-    return builder.isEmpty() ? null : Joiner.on(System.lineSeparator()).join(builder) + System.lineSeparator();
+    return builder.isEmpty() ? null : Joiner.on(System.lineSeparator()).skipNulls().join(builder) + System.lineSeparator();
   }
 
   @Override

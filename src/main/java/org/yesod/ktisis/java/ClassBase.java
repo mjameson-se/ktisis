@@ -14,6 +14,8 @@ import org.yesod.ktisis.base.ExtensionMethod.ExtensionPoint;
 import org.yesod.ktisis.base.WhitespaceHelper;
 
 import com.google.common.base.Joiner;
+import com.google.common.base.Objects;
+import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableList.Builder;
@@ -62,10 +64,11 @@ public class ClassBase
   {
     try (InputStream template = TemplateProcessor.getResource("templates/ktisis/java/ClassBase.template", ClassBase.class))
     {
-      ImmutableMap<?, ?> subParts = ImmutableMap.builder().put("ctor_args", ctorArgs(variableResolver))
-          .put("super_type_opt", superTypeOpt(variableResolver))
-          .put("super_ctor_opt", superCtorOpt(variableResolver))
-          .build();
+      ImmutableMap<?, ?> subParts = ImmutableMap.builder()
+                                                .put("ctor_args", ctorArgs(variableResolver))
+                                                .put("super_type_opt", superTypeOpt(variableResolver))
+                                                .put("super_ctor_opt", superCtorOpt(variableResolver))
+                                                .build();
       VariableResolver subResolver = VariableResolver.merge(subParts::get, variableResolver);
       return TemplateProcessor.processTemplate(template, subResolver);
     }
@@ -117,6 +120,7 @@ public class ClassBase
       VariableResolver merge = VariableResolver.merge(fieldAttrs::get, variableResolver);
       if (!isOptional(fieldAttrs))
       {
+        Imports.addImport(Preconditions.class);
         lines.add(TemplateProcessor.processTemplate("Preconditions.checkNotNull(${name}, \"${name} (${type}) is a required field\");", merge));
       }
       lines.add(TemplateProcessor.processTemplate("this.${name} = ${name};", merge));
@@ -161,14 +165,18 @@ public class ClassBase
       String name = fieldAttrs.get("name").toString();
       String type = fieldAttrs.get("type").toString();
       boolean isOptional = isOptional(fieldAttrs);
+      if (isOptional)
+      {
+        Imports.addImport(Optional.class);
+      }
       String getterName = getterName(name, type);
       String returnType = isOptional ? String.format("Optional<%s>", type) : type;
       String returnStr = isOptional ? String.format("Optional.fromNullable(%s)", name) : name;
       Map<?, ?> overrides = ImmutableMap.builder()
-          .put("getter_name", getterName)
-          .put("type", returnType)
-          .put("return", returnStr)
-          .build();
+                                        .put("getter_name", getterName)
+                                        .put("type", returnType)
+                                        .put("return", returnStr)
+                                        .build();
       try (InputStream template = TemplateProcessor.getResource("templates/ktisis/java/Getter.template", ClassBase.class))
       {
         lines.add(TemplateProcessor.processTemplate(template, VariableResolver.merge(overrides::get, fieldAttrs::get, variableResolver)));
@@ -221,6 +229,7 @@ public class ClassBase
       if (fieldAttrs.get("equals") != Boolean.FALSE)
       {
         String name = fieldAttrs.get("name").toString();
+        Imports.addImport(Objects.class);
         lines.add(String.format("Objects.equal(this.%s, that.%s)", name, name));
       }
     }

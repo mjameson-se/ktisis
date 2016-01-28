@@ -1,5 +1,9 @@
 package org.yesod.ktisis.base;
 
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
@@ -10,13 +14,26 @@ import java.util.regex.Pattern;
 import org.yesod.ktisis.TemplatePlugin;
 import org.yesod.ktisis.TemplateProcessor;
 import org.yesod.ktisis.VariableResolver;
+import org.yesod.reflection.ClassStream;
+
+import com.google.common.base.Preconditions;
 
 public class FunctionsPlugin implements TemplatePlugin
 {
-  private static Pattern matcher = Pattern.compile("#\\{(\\w+)\\(([\\w\\., ]+)\\)\\}");
+  private static Pattern matcher = Pattern.compile("#\\{(\\w+)\\(([\\w\\., ]*)\\)\\}");
   // #{toUpper(${name})}
   // #{substr(${name}, 2)}
   private Map<String, FunctionProvider> functions = new HashMap<>();
+
+  /**
+   * Annotation to facilitate automatic loading of functions
+   */
+  @Retention(RetentionPolicy.RUNTIME)
+  @Target(ElementType.METHOD)
+  public @interface FunctionRegistration
+  {
+    String value();
+  }
 
   /**
    * Functional interface for registering some function for execution from a template
@@ -25,12 +42,15 @@ public class FunctionsPlugin implements TemplatePlugin
   {
   }
 
+  /** 
+   * 
+   */
   public FunctionsPlugin()
   {
-    functions.put("toUpper", this::toUpper);
-    functions.put("substr", this::substring);
-    functions.put("now", this::now);
-    functions.put("upcase", this::upcase);
+    registerFunction("upcase", this::upcase);
+    registerFunction("now", this::now);
+    registerFunction("toUpper", this::toUpper);
+    registerFunction("substr", this::substring);
   }
 
   public String upcase(String[] args, VariableResolver ctx)
@@ -44,18 +64,18 @@ public class FunctionsPlugin implements TemplatePlugin
     functions.put(name, fn);
   }
 
-  private String toUpper(String[] args, VariableResolver ctx)
+  public String toUpper(String[] args, VariableResolver ctx)
   {
     String arg = TemplateProcessor.processTemplate(args[0], ctx);
     return arg.toUpperCase();
   }
 
-  private String now(String[] args, VariableResolver ctx)
+  public String now(String[] args, VariableResolver ctx)
   {
     return LocalDateTime.now().toString();
   }
 
-  private String substring(String[] args, VariableResolver ctx)
+  public String substring(String[] args, VariableResolver ctx)
   {
     if (args.length == 2)
     {
@@ -73,6 +93,7 @@ public class FunctionsPlugin implements TemplatePlugin
   {
     String fn = match.group(1);
     String args = TemplateProcessor.processTemplate(match.group(2), context);
+    Preconditions.checkArgument(functions.containsKey(fn), "No such function:", fn);
     return functions.get(fn).apply(args.split(", "), context);
   }
 
@@ -82,4 +103,14 @@ public class FunctionsPlugin implements TemplatePlugin
     return matcher;
   }
 
+  @Override
+  public void load(ClassStream classStream)
+  {
+    classStream.mapMethods()
+               .withAnnotation(FunctionRegistration.class)
+               .withReturnType(String.class)
+               .withParameterTypes(String[].class, VariableResolver.class)
+               .<String, FunctionProvider> asInterface(b -> b::invoke)
+               .forEach(i -> registerFunction(i.getMethod().getAnnotation(FunctionRegistration.class).value(), i.getInterface()));
+  }
 }

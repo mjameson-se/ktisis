@@ -1,5 +1,6 @@
 #! {file_comment}
 package ${package};
+
 #! {imports}
 
 #! {class}

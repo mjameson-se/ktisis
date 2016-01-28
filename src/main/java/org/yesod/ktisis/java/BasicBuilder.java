@@ -4,8 +4,11 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -15,7 +18,9 @@ import org.yesod.ktisis.base.ExtensionMethod.ExtensionPoint;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 
 public class BasicBuilder
 {
@@ -55,25 +60,34 @@ public class BasicBuilder
     {
       Matcher matcher = MAP_KV_PATTERN.matcher(type);
       Preconditions.checkArgument(matcher.find());
-      return String.format("    Map<%s, %s> %s = new HashMap<>();", matcher.group(1), matcher.group(2), name);
+      Imports.addImport(HashMap.class);
+      Imports.addImport(Map.class);
+      Imports.addImport(ImmutableMap.class);
+      return String.format("    private Map<%s, %s> %s = new HashMap<>();", matcher.group(1), matcher.group(2), name);
     }
     String collectType;
     if (type.contains("List"))
     {
+      Imports.addImport(List.class);
+      Imports.addImport(ArrayList.class);
+      Imports.addImport(ImmutableList.class);
       collectType = "ArrayList";
     }
     else if (type.contains("Set"))
     {
+      Imports.addImport(HashSet.class);
+      Imports.addImport(ImmutableSet.class);
       collectType = "HashSet";
     }
     else
     {
       throw new IllegalArgumentException("Type not supported for collector");
     }
+    Imports.addImport(Collection.class);
     Matcher matcher = COLLECTION_VALUE_TYPE_PATTERN.matcher(type);
     Preconditions.checkArgument(matcher.find());
     String paramType = matcher.group(1);
-    return String.format("    Collection<%s> %s = new %s<>();", paramType, name, collectType);
+    return String.format("    private Collection<%s> %s = new %s<>();", paramType, name, collectType);
   }
 
   private String collectorCtorArg(Map<?, ?> field)
@@ -87,10 +101,18 @@ public class BasicBuilder
     }
     else if (type.contains("List"))
     {
+      if (type.startsWith("List"))
+      {
+        Imports.addImport(List.class);
+      }
       collection = "List";
     }
     else if (type.contains("Set"))
     {
+      if (type.startsWith("Set"))
+      {
+        Imports.addImport(Set.class);
+      }
       collection = "Set";
     }
     return String.format("Immutable%s.copyOf(%s)", collection, name);

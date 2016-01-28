@@ -4,13 +4,13 @@
       return this;
     }
   
-    ${scope} Builder add#{upcase(${name})}(${type} ${name})
+    ${scope} Builder add#{upcase(${name})}(Collection<${value_type}> ${name})
     {
       this.${name}.addAll(${name});
       return this;
     }
   
-    ${scope} Builder remove#{upcase(${name})}(${type} ${name})
+    ${scope} Builder remove#{upcase(${name})}(${value_type} ${name})
     {
       this.${name}.remove(${name});
       return this;

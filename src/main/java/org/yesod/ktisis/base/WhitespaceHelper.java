@@ -50,7 +50,7 @@ public class WhitespaceHelper
       String ws = System.lineSeparator() + spaces(config.getWrappedIndent());
       if (config.isExtraNewlinesIfWrapped())
       {
-        parts = ImmutableList.<String> builder().add("").addAll(parts).add("").build();
+        parts = ImmutableList.<String> builder().add("").addAll(parts).build();
       }
       return Joiner.on(config.getPreJoin() + ws + config.getPostJoin()).skipNulls().join(parts);
     }

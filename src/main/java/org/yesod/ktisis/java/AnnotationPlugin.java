@@ -55,7 +55,6 @@ public class AnnotationPlugin implements TemplatePlugin
 
   public void registerAnnotation(String position, Function<VariableResolver, String> template)
   {
-    System.out.printf("Got annotation for pos %s%n", position);
     annotations.put(position, template);
   }
 

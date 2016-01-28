@@ -1,5 +1,6 @@
 package org.yesod.ktisis;
 
+import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
 
@@ -14,6 +15,11 @@ public interface VariableResolver extends Function<String, Object>
       return Optional.of(clazz.cast(obj));
     }
     return Optional.empty();
+  }
+
+  static VariableResolver wrap(Map<?, ?> map)
+  {
+    return map::get;
   }
 
   static VariableResolver merge(VariableResolver... resolvers)
