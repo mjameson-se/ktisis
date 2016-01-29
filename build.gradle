@@ -8,7 +8,7 @@ repositories {
 dependencies {
 	compile 'com.google.guava:guava:18.0'
 	testCompile 'junit:junit:4.11'
-	testCompile 'com.fasterxml.jackson.jr:jackson-jr-objects:2.5.3'
+	compile 'com.fasterxml.jackson.jr:jackson-jr-objects:2.5.3'
 }
 
 sourceSets {
@@ -17,4 +17,9 @@ sourceSets {
       srcDirs = ["resources/main"]
     }
   }
+}
+
+jar.manifest {
+  instruction "Import-Package", 'com.fasterxml.*; resolution=optional; version="[2.5,3)"'
+  instruction "Import-Package", "*"
 }
