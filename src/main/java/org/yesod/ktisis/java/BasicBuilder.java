@@ -68,7 +68,6 @@ public class BasicBuilder
     String collectType;
     if (type.contains("List"))
     {
-      Imports.addImport(List.class);
       Imports.addImport(ArrayList.class);
       Imports.addImport(ImmutableList.class);
       collectType = "ArrayList";

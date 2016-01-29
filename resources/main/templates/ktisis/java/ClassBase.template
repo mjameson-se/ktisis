@@ -11,7 +11,7 @@
 #! {super_ctor_opt}
 #! {class_ctor_body}
   }
-	
+
 #! {getters}
 #! {builder}
 #! {end_class}
