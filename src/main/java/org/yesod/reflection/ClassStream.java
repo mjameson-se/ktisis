@@ -34,6 +34,6 @@ public class ClassStream
 
   public MethodStream mapMethods()
   {
-    return new MethodStream(set.stream().flatMap((c) -> Arrays.stream(c.getMethods())));
+    return new MethodStream(set.stream().sorted((c1, c2) -> c1.getName().compareTo(c2.getName())).flatMap((c) -> Arrays.stream(c.getMethods())));
   }
 }

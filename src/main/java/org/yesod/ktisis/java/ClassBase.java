@@ -223,13 +223,13 @@ public class ClassBase
     {
       lines.add("super.equals(that)");
     }
+    Imports.addImport(Objects.class);
     for (Object field : fields)
     {
       Map<?, ?> fieldAttrs = (Map<?, ?>) field;
       if (fieldAttrs.get("equals") != Boolean.FALSE)
       {
         String name = fieldAttrs.get("name").toString();
-        Imports.addImport(Objects.class);
         lines.add(String.format("Objects.equal(this.%s, that.%s)", name, name));
       }
     }

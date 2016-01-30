@@ -24,13 +24,13 @@ public class ToStringExtension
     Collection<String> lines = new ArrayList<>();
     List<?> fields = variableResolver.getAs("fields", List.class).orElse(null);
     Preconditions.checkState(fields != null, "Trying to build a class without fields?");
+    Imports.addImport(MoreObjects.class);
 
     for (Object field : fields)
     {
       Map<?, ?> fieldAttrs = (Map<?, ?>) field;
       if (fieldAttrs.get("toString") != Boolean.FALSE)
       {
-        Imports.addImport(MoreObjects.class);
         String name = fieldAttrs.get("name").toString();
         lines.add(String.format(".add(\"%s\", %s)", name, name));
       }
