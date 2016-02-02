@@ -66,6 +66,7 @@ public class AnnotationPlugin implements TemplatePlugin
       .withReturnType(String.class)
       .withParameterTypes(VariableResolver.class)
       .publicOnly()
+      .sorted()
       .<String, Function<VariableResolver, String>> asInterface(b -> b::invoke)
       .forEach(w ->
       {

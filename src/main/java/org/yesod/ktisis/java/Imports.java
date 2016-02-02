@@ -60,14 +60,14 @@ public class Imports
       List<String> sections = imports.asMap()
                                      .values()
                                      .stream()
-                                     .map(c -> Joiner.on("\n")
+                                     .map(c -> Joiner.on(System.lineSeparator())
                                                      .join(c.stream()
                                                             .distinct()
                                                             .map(i -> String.format("import %s;", i))
                                                             .sorted()
                                                             .collect(Collectors.toList())))
                                      .collect(Collectors.toList());
-      return Joiner.on("\n\n").join(sections);
+      return Joiner.on(System.lineSeparator() + System.lineSeparator()).join(sections);
     }
     finally
     {

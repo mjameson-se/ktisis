@@ -36,6 +36,7 @@ public class ExtensionRegistry implements TemplatePlugin
       .withAnnotation(ExtensionPoint.class)
       .withReturnType(String.class)
       .withParameterTypes(VariableResolver.class)
+      .sorted()
       .<String, ExtensionMethod> asInterface((b) -> b::invoke)
       .forEach((iw) ->
       {

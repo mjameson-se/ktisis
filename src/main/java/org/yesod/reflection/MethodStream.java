@@ -13,6 +13,7 @@ import com.google.common.base.Throwables;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
+import com.google.common.collect.ComparisonChain;
 
 public class MethodStream
 {
@@ -59,6 +60,14 @@ public class MethodStream
   public MethodStream withFilter(Predicate<Method> filter)
   {
     return new MethodStream(methods.filter(filter));
+  }
+
+  public MethodStream sorted()
+  {
+    return new MethodStream(methods.sorted((m1, m2) -> ComparisonChain.start()
+                                                                      .compare(m1.getDeclaringClass().getName(), m2.getDeclaringClass().getName())
+                                                                      .compare(m1.getName(), m2.getName())
+                                                                      .result()));
   }
 
   public <X, Y> Stream<InterfaceWrapper<Y>> asInterface(Function<BoundMethod<X>, Y> transform)
