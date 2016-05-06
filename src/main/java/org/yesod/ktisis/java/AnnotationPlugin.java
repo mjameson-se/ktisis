@@ -45,7 +45,7 @@ public class AnnotationPlugin implements TemplatePlugin
         strs.add(str);
       }
     }
-    return Joiner.on(" ").skipNulls().join(strs) + (strs.isEmpty() ? "" : " ");
+    return Joiner.on("").skipNulls().join(strs);
   }
 
   public void registerAnnotation(String position, String template)

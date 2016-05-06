@@ -1,0 +1,23 @@
+  ${scope} ${classname} add#{upcase(${name})}(${key_type} k, ${value_type} v)
+  {
+    this.${name}.put(k, v);
+    return this;
+  }
+
+  ${scope} ${classname} add#{upcase(${name})}(Map<${key_type}, ${value_type}> ${name})
+  {
+    this.${name}.putAll(${name});
+    return this;
+  }
+
+  ${scope} ${classname} remove#{upcase(${name})}(${key_type} ${name})
+  {
+    this.${name}.remove(${name});
+    return this;
+  }
+
+  ${scope} ${classname} clear#{upcase(${name})}()
+  {
+    this.${name}.clear();
+    return this;
+  }

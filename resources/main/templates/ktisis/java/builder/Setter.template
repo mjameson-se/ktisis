@@ -3,4 +3,3 @@
       this.${name} = ${name};
       return this;
     }
-  

@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -11,6 +12,7 @@ import java.util.stream.Collectors;
 import org.yesod.ktisis.TemplateProcessor;
 import org.yesod.ktisis.VariableResolver;
 import org.yesod.ktisis.base.ExtensionMethod.ExtensionPoint;
+import org.yesod.ktisis.base.FeatureTags;
 import org.yesod.ktisis.base.WhitespaceHelper;
 
 import com.google.common.base.Joiner;
@@ -91,7 +93,7 @@ public class ClassBase
     Map<?, ?> superdef = variableResolver.getAs("supertype", Map.class).orElse(null);
     if (superdef == null)
     {
-      return "";
+      return variableResolver.getAs("implements", String.class).map(impl -> " implements " + impl).orElse("");
     }
     return String.format(" extends %s", superdef.get("name"));
   }
@@ -137,8 +139,15 @@ public class ClassBase
     for (Object field : fields)
     {
       Map<?, ?> fieldAttrs = Map.class.cast(field);
-      lines.add(TemplateProcessor.processTemplate("  @{field}private final ${type} ${name};",
-                                                  VariableResolver.merge(fieldAttrs::get, variableResolver)));
+      VariableResolver vr = VariableResolver.merge(fieldAttrs::get, variableResolver);
+      if (!FeatureTags.hasTag(Setters.TAG, vr) && vr.apply("final") != Boolean.FALSE)
+      {
+        lines.add(TemplateProcessor.processTemplate("  @{field}private final ${type} ${name};", vr));
+      }
+      else
+      {
+        lines.add(TemplateProcessor.processTemplate("  @{field}private ${type} ${name};", vr));
+      }
     }
     return Joiner.on("\n").join(lines);
   }
@@ -163,6 +172,7 @@ public class ClassBase
     {
       Map<?, ?> fieldAttrs = Map.class.cast(field);
       String name = fieldAttrs.get("name").toString();
+
       String type = fieldAttrs.get("type").toString();
       boolean isOptional = isOptional(fieldAttrs);
       if (isOptional)
@@ -172,6 +182,12 @@ public class ClassBase
       String getterName = getterName(name, type);
       String returnType = isOptional ? String.format("Optional<%s>", type) : type;
       String returnStr = isOptional ? String.format("Optional.fromNullable(%s)", name) : name;
+      if (BasicBuilder.isCollector(fieldAttrs) && !type.contains("Immutable"))
+      {
+        Imports.addImport(Collections.class);
+        returnStr = String.format("Collections.unmodifiable%s(%s)", BasicBuilder.baseCollectionType(type), name);
+        returnType = type;
+      }
       Map<?, ?> overrides = ImmutableMap.builder()
                                         .put("getter_name", getterName)
                                         .put("type", returnType)

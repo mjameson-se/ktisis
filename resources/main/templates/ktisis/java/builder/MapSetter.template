@@ -3,22 +3,21 @@
       this.${name}.put(k, v);
       return this;
     }
-  
-    ${scope} Builder add#{upcase(${name})}(${type} ${name})
+
+    ${scope} Builder add#{upcase(${name})}(Map<${key_type}, ${value_type}> ${name})
     {
       this.${name}.putAll(${name});
       return this;
     }
-  
+
     ${scope} Builder remove#{upcase(${name})}(${key_type} ${name})
     {
       this.${name}.remove(${name});
       return this;
     }
-  
+
     ${scope} Builder clear#{upcase(${name})}()
     {
       this.${name}.clear();
       return this;
     }
-  

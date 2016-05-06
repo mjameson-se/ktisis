@@ -18,6 +18,7 @@ import org.yesod.reflection.ClassStream;
 import org.yesod.reflection.ClasspathSearch;
 
 import com.fasterxml.jackson.jr.ob.JSON;
+import com.google.common.collect.ImmutableMap;
 
 public class TestClass
 {
@@ -34,8 +35,9 @@ public class TestClass
     TemplateProcessor.registerPlugin(new FunctionsPlugin());
     TemplateProcessor.loadAll(new ClasspathSearch().includePackage("org.yesod.ktisis.java").classStream());
     TemplateProcessor.loadAll(new ClassStream(AnnotationStuff.class));
-
-    System.out.println(TemplateProcessor.processTemplate(is, JSON.std.mapFrom(fis)::get));
+    VariableResolver parent = ImmutableMap.of("parent",
+                                              ImmutableMap.of("features", ImmutableMap.of("setters", Boolean.TRUE, "builder", Boolean.TRUE)))::get;
+    System.out.println(TemplateProcessor.processTemplate(is, VariableResolver.merge(JSON.std.mapFrom(fis)::get, parent)));
   }
 
   public static class AnnotationStuff

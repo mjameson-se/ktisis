@@ -47,7 +47,7 @@ public class WhitespaceHelper
     int total = parts.stream().mapToInt(String::length).sum() + (config.getPostJoin().length() + config.getPreJoin().length()) * (parts.size() - 1);
     if (total > config.getLineLength())
     {
-      String ws = System.lineSeparator() + spaces(config.getWrappedIndent());
+      String ws = '\n' + spaces(config.getWrappedIndent());
       if (config.isExtraNewlinesIfWrapped())
       {
         parts = ImmutableList.<String> builder().add("").addAll(parts).build();

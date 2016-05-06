@@ -1,0 +1,5 @@
+
+  public Builder copyBuilder()
+  {
+    return new Builder(this);
+  }

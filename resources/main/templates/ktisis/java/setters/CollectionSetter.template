@@ -1,0 +1,23 @@
+  ${scope} ${classname} add#{upcase(${name})}(${value_type} ${name})
+  {
+    this.${name}.add(${name});
+    return this;
+  }
+
+  ${scope} ${classname} add#{upcase(${name})}(Collection<${value_type}> ${name})
+  {
+    this.${name}.addAll(${name});
+    return this;
+  }
+
+  ${scope} ${classname} remove#{upcase(${name})}(${value_type} ${name})
+  {
+    this.${name}.remove(${name});
+    return this;
+  }
+
+  ${scope} ${classname} clear#{upcase(${name})}()
+  {
+    this.${name}.clear();
+    return this;
+  }

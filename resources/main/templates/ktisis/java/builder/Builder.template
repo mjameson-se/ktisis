@@ -1,19 +1,20 @@
-  ${scope} static class Builder
+  ${scope} static class Builder${extend_clause}
   {
 #! {builder_fields}
 
     ${scope} Builder()
     {
     }
-    
+
     ${scope} Builder(${name} original)
-    {
+    {${super_copy_clause}
 #! {copy_body}
     }
 
 #! {builder_setters}
     ${scope} ${name} build()
     {
+#! {before_build}
       return new ${name}(${builder_ctor_args});
     }
   }

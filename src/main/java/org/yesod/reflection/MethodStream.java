@@ -83,6 +83,6 @@ public class MethodStream
         throw Throwables.propagate(e);
       }
     };
-    return methods.map(i).map((b) -> new InterfaceWrapper<Y>(transform.apply(b), b.getMethod()));
+    return methods.map(i).map((b) -> new InterfaceWrapper<Y>(b.getInstance(), transform.apply(b), b.getMethod()));
   }
 }

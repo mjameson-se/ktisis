@@ -23,9 +23,9 @@ public class FileComment
   @ExtensionPoint("file_comment")
   public String fileCommentFromFile(VariableResolver variableResolver) throws IOException
   {
-    String filePath = System.getProperty("file.comment");
+    String filePath = variableResolver.getAs("file_comment", String.class).orElse(System.getProperty("file.comment"));
     try (InputStream is = Files.newInputStream(Paths.get(filePath), StandardOpenOption.READ);
-        BufferedReader br = new BufferedReader(new InputStreamReader(is, StandardCharsets.UTF_8)))
+         BufferedReader br = new BufferedReader(new InputStreamReader(is, StandardCharsets.UTF_8)))
     {
       Collection<String> lines = new ArrayList<>();
       lines.add("/**");

@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Collections;
 import java.util.Map;
 
 import org.yesod.ktisis.TemplateProcessor;
@@ -29,6 +30,8 @@ public class KtisisJava
     public String typeName;
   }
 
+  private Map<Object, Object> parentConfig = Collections.emptyMap();
+
   /**
    * @throws IOException  
    * 
@@ -41,6 +44,16 @@ public class KtisisJava
     TemplateProcessor.registerPlugin(new SubstitutionPlugin());
     TemplateProcessor.registerPlugin(new FunctionsPlugin());
     TemplateProcessor.loadAll(new ClasspathSearch().includePackage("org.yesod.ktisis.java").classStream());
+  }
+
+  public void setParentConfig(File parentCfg) throws IOException
+  {
+    setParentConfig(map(parentCfg));
+  }
+
+  public void setParentConfig(Map<Object, Object> parentCfg)
+  {
+    this.parentConfig = parentCfg;
   }
 
   /**
@@ -75,7 +88,8 @@ public class KtisisJava
   {
     Preconditions.checkArgument(def.exists());
     Map<Object, Object> definition = map(def);
-    VariableResolver vr = definition::get;
+    definition.put("parent", parentConfig);
+    VariableResolver vr = VariableResolver.merge(definition::get, parentConfig::get);
     if (superdefOpt.isPresent())
     {
       Preconditions.checkArgument(superdefOpt.get().exists());

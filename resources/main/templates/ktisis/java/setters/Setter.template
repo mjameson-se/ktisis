@@ -1,0 +1,5 @@
+  ${scope} ${classname} set#{upcase(${name})}(${type} ${name})
+  {
+    this.${name} = ${name};
+    return this;
+  }

@@ -9,10 +9,10 @@
 
     if (!(other instanceof ${name}))
     {
-       return false;
+      return false;
     }
 
     ${name} that = (${name}) other;
-    
+
     return ${equals};
   }
