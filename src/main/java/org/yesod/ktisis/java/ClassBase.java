@@ -7,17 +7,20 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.yesod.ktisis.TemplateProcessor;
 import org.yesod.ktisis.VariableResolver;
 import org.yesod.ktisis.base.ExtensionMethod.ExtensionPoint;
 import org.yesod.ktisis.base.FeatureTags;
+import org.yesod.ktisis.base.FeatureTags.Feature;
+import org.yesod.ktisis.base.FunctionsPlugin.FunctionRegistration;
 import org.yesod.ktisis.base.WhitespaceHelper;
+import org.yesod.ktisis.base.WhitespaceHelperConfig;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Objects;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableList.Builder;
@@ -69,7 +72,10 @@ public class ClassBase
       ImmutableMap<?, ?> subParts = ImmutableMap.builder()
                                                 .put("ctor_args", ctorArgs(variableResolver))
                                                 .put("super_type_opt", superTypeOpt(variableResolver))
-                                                .put("super_ctor_opt", superCtorOpt(variableResolver))
+                                                .put("class_modifiers",
+                                                     variableResolver.getAs("class_modifiers", Collection.class)
+                                                                     .map(s -> " " + Joiner.on(" ").join(s))
+                                                                     .orElse(""))
                                                 .build();
       VariableResolver subResolver = VariableResolver.merge(subParts::get, variableResolver);
       return TemplateProcessor.processTemplate(template, subResolver);
@@ -91,11 +97,12 @@ public class ClassBase
   private String superTypeOpt(VariableResolver variableResolver)
   {
     Map<?, ?> superdef = variableResolver.getAs("supertype", Map.class).orElse(null);
+    String impls = variableResolver.getAs("implements", String.class).map(impl -> " implements " + impl).orElse("");
     if (superdef == null)
     {
-      return variableResolver.getAs("implements", String.class).map(impl -> " implements " + impl).orElse("");
+      return impls;
     }
-    return String.format(" extends %s", superdef.get("name"));
+    return String.format(" extends %s%s", superdef.get("name"), impls);
   }
 
   @ExtensionPoint("super_ctor_opt")
@@ -104,7 +111,7 @@ public class ClassBase
     List<Map<?, ?>> superFields = getSuperFields(ctx);
     if (superFields.isEmpty())
     {
-      return "";
+      return null;
     }
     String args = superFields.stream().map((f) -> (String) f.get("name")).collect(Collectors.joining(", "));
     return String.format("    super(%s);", args);
@@ -127,7 +134,8 @@ public class ClassBase
       }
       lines.add(TemplateProcessor.processTemplate("this.${name} = ${name};", merge));
     }
-    return "    " + Joiner.on("\n    ").join(lines);
+    WhitespaceHelperConfig config = WhitespaceHelperConfig.lineJoiner(4);
+    return WhitespaceHelper.spaces(4) + WhitespaceHelper.join(config, lines);
   }
 
   @ExtensionPoint("class_fields")
@@ -140,7 +148,7 @@ public class ClassBase
     {
       Map<?, ?> fieldAttrs = Map.class.cast(field);
       VariableResolver vr = VariableResolver.merge(fieldAttrs::get, variableResolver);
-      if (!FeatureTags.hasTag(Setters.TAG, vr) && vr.apply("final") != Boolean.FALSE)
+      if (!FeatureTags.hasTag(Setters.TAG, vr, false) && vr.apply("final") != Boolean.FALSE)
       {
         lines.add(TemplateProcessor.processTemplate("  @{field}private final ${type} ${name};", vr));
       }
@@ -149,7 +157,7 @@ public class ClassBase
         lines.add(TemplateProcessor.processTemplate("  @{field}private ${type} ${name};", vr));
       }
     }
-    return Joiner.on("\n").join(lines);
+    return Joiner.on(WhitespaceHelper.lf()).join(lines);
   }
 
   public static String upcase(String name)
@@ -162,6 +170,7 @@ public class ClassBase
     return String.format("%s%s", type.equals("Boolean") ? "is" : "get", upcase(name));
   }
 
+  @Feature(value = "getters", includeByDefault = true)
   @ExtensionPoint("getters")
   public String writeClassGetters(VariableResolver variableResolver) throws IOException
   {
@@ -181,7 +190,7 @@ public class ClassBase
       }
       String getterName = getterName(name, type);
       String returnType = isOptional ? String.format("Optional<%s>", type) : type;
-      String returnStr = isOptional ? String.format("Optional.fromNullable(%s)", name) : name;
+      String returnStr = isOptional ? String.format("Optional.ofNullable(%s)", name) : name;
       if (BasicBuilder.isCollector(fieldAttrs) && !type.contains("Immutable"))
       {
         Imports.addImport(Collections.class);
@@ -198,9 +207,47 @@ public class ClassBase
         lines.add(TemplateProcessor.processTemplate(template, VariableResolver.merge(overrides::get, fieldAttrs::get, variableResolver)));
       }
     }
-    return Joiner.on("\n").join(lines);
+    return Joiner.on(WhitespaceHelper.lf()).join(lines);
   }
 
+  @FunctionRegistration("formatComment")
+  public String formatComment(String[] args, VariableResolver ctx)
+  {
+    Preconditions.checkArgument(args.length >= 2);
+    // The args list has been split on ", "; if the comment contained that string then we need to restore it
+    String comment = args[0];
+    for (int i = 1; i < args.length - 1; i++)
+    {
+      comment += ", " + args[i];
+    }
+    comment = TemplateProcessor.processTemplate(comment, ctx);
+    int indent = Integer.parseInt(args[args.length - 1]);
+    String[] words = comment.split(" ");
+    String line = words[0];
+    Collection<String> lines = new ArrayList<>();
+    for (int i = 1; i < words.length; i++)
+    {
+      String word = words[i];
+      if (line.length() + word.length() < 80)
+      {
+        line += " " + word;
+      }
+      else
+      {
+        lines.add(line);
+        line = word;
+      }
+    }
+    lines.add(line);
+    WhitespaceHelperConfig config = new WhitespaceHelperConfig.Builder().postJoin(" * ")
+                                                                        .wrappedIndent(indent)
+                                                                        .lineLength(0)
+                                                                        .build();
+
+    return WhitespaceHelper.join(config, lines);
+  }
+
+  @Feature(value = "hashEquals", includeByDefault = true)
   @ExtensionPoint("end_class")
   public String writeHashCode(VariableResolver variableResolver) throws IOException
   {
@@ -228,6 +275,7 @@ public class ClassBase
     }
   }
 
+  @Feature(value = "hashEquals", includeByDefault = true)
   @ExtensionPoint("end_class")
   public String writeEquals(VariableResolver variableResolver) throws IOException
   {

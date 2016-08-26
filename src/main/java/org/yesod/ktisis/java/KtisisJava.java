@@ -11,7 +11,9 @@ import org.yesod.ktisis.TemplateProcessor;
 import org.yesod.ktisis.VariableResolver;
 import org.yesod.ktisis.base.ExtensionRegistry;
 import org.yesod.ktisis.base.FunctionsPlugin;
+import org.yesod.ktisis.base.IfDefPlugin;
 import org.yesod.ktisis.base.SubstitutionPlugin;
+import org.yesod.ktisis.base.WhitespaceHelper;
 import org.yesod.reflection.ClasspathSearch;
 
 import com.fasterxml.jackson.jr.ob.JSON;
@@ -41,6 +43,7 @@ public class KtisisJava
     TemplateProcessor.reset();
     TemplateProcessor.registerPlugin(new ExtensionRegistry());
     TemplateProcessor.registerPlugin(new AnnotationPlugin());
+    TemplateProcessor.registerPlugin(new IfDefPlugin());
     TemplateProcessor.registerPlugin(new SubstitutionPlugin());
     TemplateProcessor.registerPlugin(new FunctionsPlugin());
     TemplateProcessor.loadAll(new ClasspathSearch().includePackage("org.yesod.ktisis.java").classStream());
@@ -68,12 +71,12 @@ public class KtisisJava
 
   public ClassOutput process(File def, File superdef) throws IOException
   {
-    return process(def, Optional.of(superdef));
+    return processInternal(def, Optional.fromNullable(superdef));
   }
 
   public ClassOutput process(File def) throws IOException
   {
-    return process(def, Optional.absent());
+    return processInternal(def, Optional.absent());
   }
 
   private Map<Object, Object> map(File file) throws IOException
@@ -84,24 +87,30 @@ public class KtisisJava
     }
   }
 
-  private ClassOutput process(File def, Optional<File> superdefOpt) throws IOException
+  private ClassOutput processInternal(File def, Optional<File> superdefOpt) throws IOException
   {
     Preconditions.checkArgument(def.exists());
     Map<Object, Object> definition = map(def);
     definition.put("parent", parentConfig);
     VariableResolver vr = VariableResolver.merge(definition::get, parentConfig::get);
+    String pkg = vr.getAs("package", String.class).orElse("");
     if (superdefOpt.isPresent())
     {
       Preconditions.checkArgument(superdefOpt.get().exists());
       Map<?, ?> superdef = map(superdefOpt.get());
+      String superpkg = superdef.get("package").toString();
+      if (!pkg.equals(superpkg))
+      {
+        Imports.addImport(superpkg + "." + superdef.get("name").toString());
+      }
       definition.put("supertype", superdef);
     }
     ClassOutput co = new ClassOutput();
-    co.target = vr.getAs("package", String.class).orElse("").replace(".", "/");
+    co.target = pkg.replace(".", "/");
     co.typeName = vr.getAs("name", String.class).orElse("");
     try (InputStream is = TemplateProcessor.getResource("templates/ktisis/java/FileBase.template", KtisisJava.class))
     {
-      co.file = TemplateProcessor.processTemplate(is, vr);
+      co.file = WhitespaceHelper.postProcess(TemplateProcessor.processTemplate(is, vr));
     }
     return co;
   }

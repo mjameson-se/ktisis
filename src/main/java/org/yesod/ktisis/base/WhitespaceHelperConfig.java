@@ -156,4 +156,9 @@ public class WhitespaceHelperConfig
                       .add("wrappedIndent", wrappedIndent)
                       .toString();
   }
+
+  public static WhitespaceHelperConfig lineJoiner(int indent)
+  {
+    return new WhitespaceHelperConfig.Builder().lineLength(0).wrappedIndent(indent).build();
+  }
 }

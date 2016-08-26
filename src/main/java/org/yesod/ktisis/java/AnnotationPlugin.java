@@ -3,14 +3,17 @@ package org.yesod.ktisis.java;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.util.ArrayList;
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.yesod.ktisis.TemplatePlugin;
-import org.yesod.ktisis.TemplateProcessor;
 import org.yesod.ktisis.VariableResolver;
+import org.yesod.ktisis.base.FeatureTags;
+import org.yesod.ktisis.base.FeatureTags.Feature;
 import org.yesod.reflection.ClassStream;
+import org.yesod.reflection.InterfaceWrapper;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ArrayListMultimap;
@@ -19,12 +22,12 @@ import com.google.common.collect.Multimap;
 public class AnnotationPlugin implements TemplatePlugin
 {
   private static Pattern annotationMatcher = Pattern.compile("@\\{([\\w]*)\\}");
-  private Multimap<String, Function<VariableResolver, String>> annotations = ArrayListMultimap.create();
+  private Multimap<String, InterfaceWrapper<Function<VariableResolver, String>>> annotations = ArrayListMultimap.create();
 
   @Retention(RetentionPolicy.RUNTIME)
   public @interface AnnotationRegistration
   {
-    String value();
+    String[] value();
   }
 
   @Override
@@ -37,8 +40,15 @@ public class AnnotationPlugin implements TemplatePlugin
   public String process(Matcher matcher, VariableResolver context)
   {
     ArrayList<String> strs = new ArrayList<>();
-    for (Function<VariableResolver, String> annotation : annotations.get(matcher.group(1)))
+    for (InterfaceWrapper<Function<VariableResolver, String>> wrapper : annotations.get(matcher.group(1)))
     {
+      Optional<Feature> featureOpt = wrapper.getAnnotation(Feature.class);
+      if (featureOpt.isPresent() && !FeatureTags.hasTag(featureOpt.get(), context))
+      {
+        continue;
+      }
+
+      Function<VariableResolver, String> annotation = wrapper.getInterface();
       String str = annotation.apply(context);
       if (str != null)
       {
@@ -46,16 +56,6 @@ public class AnnotationPlugin implements TemplatePlugin
       }
     }
     return Joiner.on("").skipNulls().join(strs);
-  }
-
-  public void registerAnnotation(String position, String template)
-  {
-    registerAnnotation(position, (ctx) -> TemplateProcessor.processTemplate(template, ctx));
-  }
-
-  public void registerAnnotation(String position, Function<VariableResolver, String> template)
-  {
-    annotations.put(position, template);
   }
 
   @Override
@@ -70,7 +70,10 @@ public class AnnotationPlugin implements TemplatePlugin
       .<String, Function<VariableResolver, String>> asInterface(b -> b::invoke)
       .forEach(w ->
       {
-        registerAnnotation(w.getMethod().getAnnotation(AnnotationRegistration.class).value(), w.getInterface());
+        for (String extPt : w.getMethod().getAnnotation(AnnotationRegistration.class).value())
+        {
+          annotations.put(extPt, w);
+        }
       });
   }
 }

@@ -11,6 +11,7 @@ import org.yesod.ktisis.TemplateProcessor;
 import org.yesod.ktisis.VariableResolver;
 import org.yesod.ktisis.base.ExtensionRegistry;
 import org.yesod.ktisis.base.FunctionsPlugin;
+import org.yesod.ktisis.base.IfDefPlugin;
 import org.yesod.ktisis.base.SubstitutionPlugin;
 import org.yesod.ktisis.java.AnnotationPlugin;
 import org.yesod.ktisis.java.AnnotationPlugin.AnnotationRegistration;
@@ -30,6 +31,7 @@ public class TestClass
     InputStream fis = Files.newInputStream(Paths.get("resources/test/TestClass.json"), StandardOpenOption.READ);
 
     TemplateProcessor.registerPlugin(new ExtensionRegistry());
+    TemplateProcessor.registerPlugin(new IfDefPlugin());
     TemplateProcessor.registerPlugin(new AnnotationPlugin());
     TemplateProcessor.registerPlugin(new SubstitutionPlugin());
     TemplateProcessor.registerPlugin(new FunctionsPlugin());
@@ -77,5 +79,33 @@ public class TestClass
 
     System.out.println(TemplateProcessor.processTemplate(is, JSON.std.mapFrom(fis)::get));
 
+  }
+
+  @Test
+  public void testIfDef() throws Exception
+  {
+    System.setProperty("file.comment", "resources/test/Test.comment");
+
+    TemplateProcessor.registerPlugin(new AnnotationPlugin());
+    TemplateProcessor.registerPlugin(new IfDefPlugin());
+    TemplateProcessor.registerPlugin(new ExtensionRegistry());
+    TemplateProcessor.registerPlugin(new SubstitutionPlugin());
+    TemplateProcessor.registerPlugin(new FunctionsPlugin());
+    TemplateProcessor.loadAll(new ClasspathSearch().includePackage("org.yesod.ktisis.java").classStream());
+
+    try (InputStream is = Files.newInputStream(Paths.get("resources/test/ifdeftest.template"), StandardOpenOption.READ))
+    {
+      System.out.println(TemplateProcessor.processTemplate(is, ImmutableMap.of("not", "defined")::get));
+    }
+    System.out.println();
+    try (InputStream is = Files.newInputStream(Paths.get("resources/test/ifdeftest.template"), StandardOpenOption.READ))
+    {
+      System.out.println(TemplateProcessor.processTemplate(is, ImmutableMap.of("define_me", "defined")::get));
+    }
+    System.out.println();
+    try (InputStream is = Files.newInputStream(Paths.get("resources/test/ifdeftest.template"), StandardOpenOption.READ))
+    {
+      System.out.println(TemplateProcessor.processTemplate(is, ImmutableMap.of("second_def", "defined")::get));
+    }
   }
 }

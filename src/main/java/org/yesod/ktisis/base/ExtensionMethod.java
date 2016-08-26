@@ -20,6 +20,6 @@ public interface ExtensionMethod
   @Target(ElementType.METHOD)
   public @interface ExtensionPoint
   {
-    String value();
+    String[] value();
   }
 }

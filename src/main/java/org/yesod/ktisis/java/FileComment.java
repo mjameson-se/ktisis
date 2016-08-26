@@ -14,6 +14,7 @@ import java.util.Collection;
 import org.yesod.ktisis.TemplateProcessor;
 import org.yesod.ktisis.VariableResolver;
 import org.yesod.ktisis.base.ExtensionMethod.ExtensionPoint;
+import org.yesod.ktisis.base.WhitespaceHelper;
 
 import com.google.common.base.Joiner;
 
@@ -34,7 +35,7 @@ public class FileComment
         lines.add(TemplateProcessor.processTemplate(line, variableResolver));
       });
       lines.add("*/");
-      return Joiner.on("\n * ").skipNulls().join(lines);
+      return Joiner.on(WhitespaceHelper.lf() + " * ").skipNulls().join(lines);
     }
   }
 }

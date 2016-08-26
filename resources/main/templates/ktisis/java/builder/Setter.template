@@ -1,5 +1,6 @@
     ${scope} Builder ${name}(${type} ${name})
     {
+#! {builder_before_set}
       this.${name} = ${name};
       return this;
     }

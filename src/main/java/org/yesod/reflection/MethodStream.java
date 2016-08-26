@@ -25,6 +25,11 @@ public class MethodStream
     this.methods = methods;
   }
 
+  public MethodStream(Class<?> clazz)
+  {
+    this(Arrays.stream(clazz.getMethods()));
+  }
+
   private static Object newInstance(Class<?> c)
   {
     try
@@ -84,5 +89,21 @@ public class MethodStream
       }
     };
     return methods.map(i).map((b) -> new InterfaceWrapper<Y>(b.getInstance(), transform.apply(b), b.getMethod()));
+  }
+
+  public <X> Stream<BoundMethod<X>> asBoundMethod()
+  {
+    Function<Method, BoundMethod<X>> i = (m) ->
+    {
+      try
+      {
+        return BoundMethod.<X> of(m, instanceCache.get(m.getDeclaringClass()));
+      }
+      catch (ExecutionException e)
+      {
+        throw Throwables.propagate(e);
+      }
+    };
+    return methods.map(i);
   }
 }

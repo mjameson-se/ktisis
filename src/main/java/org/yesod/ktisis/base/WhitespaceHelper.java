@@ -1,5 +1,6 @@
 package org.yesod.ktisis.base;
 
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -9,6 +10,33 @@ import com.google.common.collect.ImmutableList;
 
 public class WhitespaceHelper
 {
+  private static final String lineEnding;
+  static
+  {
+    if (Boolean.getBoolean("lf.endings"))
+    {
+      lineEnding = "\n";
+    }
+    else if (Boolean.getBoolean("crlf.endings"))
+    {
+      lineEnding = "\r\n";
+    }
+    else
+    {
+      lineEnding = System.lineSeparator();
+    }
+  }
+
+  public static String lineEnding()
+  {
+    return lineEnding;
+  }
+
+  public static String lf()
+  {
+    return lineEnding;
+  }
+
   public static String joinWithWrapIfNecessary(Collection<String> parts, String join, int column, int limit)
   {
     return joinWithWrapIfNecessary(parts, join, "", column, limit);
@@ -47,7 +75,7 @@ public class WhitespaceHelper
     int total = parts.stream().mapToInt(String::length).sum() + (config.getPostJoin().length() + config.getPreJoin().length()) * (parts.size() - 1);
     if (total > config.getLineLength())
     {
-      String ws = '\n' + spaces(config.getWrappedIndent());
+      String ws = lineEnding + spaces(config.getWrappedIndent());
       if (config.isExtraNewlinesIfWrapped())
       {
         parts = ImmutableList.<String> builder().add("").addAll(parts).build();
@@ -55,5 +83,13 @@ public class WhitespaceHelper
       return Joiner.on(config.getPreJoin() + ws + config.getPostJoin()).skipNulls().join(parts);
     }
     return Joiner.on(config.getPreJoin() + config.getPostJoin()).skipNulls().join(parts);
+  }
+
+  public static String postProcess(String file)
+  {
+    return Arrays.stream(file.split("\n")).map(s ->
+    {
+      return s.replaceAll("\\s+$", "");
+    }).reduce((one, two) -> String.format("%s%s%s", one, lineEnding, two)).orElse("");
   }
 }

@@ -22,6 +22,7 @@ import org.yesod.ktisis.TemplateProcessor;
 import org.yesod.ktisis.VariableResolver;
 import org.yesod.ktisis.base.ExtensionMethod.ExtensionPoint;
 import org.yesod.ktisis.base.FeatureTags.Feature;
+import org.yesod.ktisis.base.WhitespaceHelper;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
@@ -82,6 +83,6 @@ public class Setters
         }
       }
     }
-    return Joiner.on("\n").join(lines);
+    return Joiner.on(WhitespaceHelper.lf()).join(lines);
   }
 }

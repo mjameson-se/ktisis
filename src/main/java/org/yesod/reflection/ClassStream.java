@@ -36,4 +36,9 @@ public class ClassStream
   {
     return new MethodStream(set.stream().sorted((c1, c2) -> c1.getName().compareTo(c2.getName())).flatMap((c) -> Arrays.stream(c.getMethods())));
   }
+
+  public Stream<Class<?>> stream()
+  {
+    return set.stream();
+  }
 }

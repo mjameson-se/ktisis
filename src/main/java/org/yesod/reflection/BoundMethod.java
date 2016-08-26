@@ -1,7 +1,10 @@
 package org.yesod.reflection;
 
+import java.lang.reflect.AnnotatedType;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.function.BiFunction;
 
 import com.google.common.base.Throwables;
 
@@ -24,6 +27,25 @@ public class BoundMethod<T>
       return (T) invoker.invoke(instance, objects);
     }
     catch (InvocationTargetException | IllegalAccessException e)
+    {
+      throw Throwables.propagate(e);
+    }
+  }
+
+  @SuppressWarnings("unchecked")
+  public T invoke(BiFunction<Integer, AnnotatedType, Object> parameterResolver)
+  {
+    ArrayList<Object> args = new ArrayList<>();
+    AnnotatedType[] params = invoker.getAnnotatedParameterTypes();
+    for (int i = 0; i < params.length; ++i)
+    {
+      args.add(parameterResolver.apply(i, params[i]));
+    }
+    try
+    {
+      return (T) invoker.invoke(instance, args.toArray());
+    }
+    catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e)
     {
       throw Throwables.propagate(e);
     }

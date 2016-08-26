@@ -11,7 +11,6 @@ package org.yesod.ktisis.base;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
-import java.util.Collections;
 import java.util.Map;
 
 import org.yesod.ktisis.VariableResolver;
@@ -26,18 +25,23 @@ public class FeatureTags
   public @interface Feature
   {
     String value();
+
+    boolean includeByDefault() default false;
   }
 
-  public static boolean hasTag(String tag, VariableResolver ctx)
+  public static boolean hasTag(Feature tag, VariableResolver ctx)
   {
-    return ctx.getAs("parent.features", Map.class).map(m -> m.containsKey(tag)).orElse(Boolean.FALSE) ||
-           ctx.getAs("features", Map.class).map(m -> m.containsKey(tag)).orElse(Boolean.FALSE);
+    return hasTag(tag.value(), ctx, tag.includeByDefault());
   }
 
-  public static VariableResolver getTag(String tag, VariableResolver ctx)
+  public static boolean hasTag(String tag, VariableResolver ctx, Boolean defaultValue)
   {
-    VariableResolver features = ctx.getAs("features", Map.class).orElse(Collections.emptyMap())::get;
-    VariableResolver parentFeatures = ctx.getAs("parent.features", Map.class).orElse(Collections.emptyMap())::get;
-    return features.getAs(tag, Map.class).orElse(parentFeatures.getAs(tag, Map.class).orElse(Collections.emptyMap()))::get;
+    return ctx.getAs("features", Map.class)
+              .filter(m -> m.containsKey(tag))
+              .map(m -> m.get(tag) == Boolean.TRUE)
+              .orElseGet(() -> ctx.getAs("parent.features", Map.class)
+                                  .filter(m -> m.containsKey(tag))
+                                  .map(m -> m.get(tag) == Boolean.TRUE)
+                                  .orElse(defaultValue));
   }
 }

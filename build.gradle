@@ -1,6 +1,6 @@
 apply plugin: 'java'
 apply plugin: 'osgi'
-project.version = '1.0'
+project.version = '1.2'
 repositories {
 	mavenCentral() 
 }
@@ -20,6 +20,6 @@ sourceSets {
 }
 
 jar.manifest {
-  instruction "Import-Package", 'com.fasterxml.*; resolution=optional; version="[2.5,3)"'
+  instruction "Import-Package", 'com.fasterxml.*; resolution:=optional; version="[2.5,3)"'
   instruction "Import-Package", "*"
 }

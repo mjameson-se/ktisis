@@ -1,5 +1,7 @@
 package org.yesod.ktisis.java;
 
+import static org.yesod.ktisis.base.WhitespaceHelper.lf;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -67,7 +69,7 @@ public class BasicBuilder
           case "extend_clause":
             return superIsExtensible(variableResolver) ? String.format(" extends %s.Builder", superName(variableResolver)) : "";
           case "super_copy_clause":
-            return superIsExtensible(variableResolver) ? "\n      super(original);" : "";
+            return superIsExtensible(variableResolver) ? lf() + "      super(original);" : "";
           default:
             return variableResolver.apply(s);
         }
@@ -224,7 +226,7 @@ public class BasicBuilder
         lines.add(TemplateProcessor.processTemplate(format, VariableResolver.merge(fieldAttrs::get, variableResolver)));
       }
     }
-    return Joiner.on("\n").join(lines);
+    return Joiner.on(lf()).join(lines);
   }
 
   @ExtensionPoint("builder_setters")
@@ -265,7 +267,7 @@ public class BasicBuilder
         }
       }
     }
-    return Joiner.on("\n").join(lines);
+    return Joiner.on(lf()).join(lines);
   }
 
   private Collection<Map<?, ?>> getFields(VariableResolver ctx)
@@ -292,21 +294,15 @@ public class BasicBuilder
       else if (ClassBase.isOptional(fieldAttrs))
       {
         String def = (String) fieldAttrs.get("default");
-        if (def != null)
-        {
-          lines.add(String.format("      this.%s = original.%s().or(%s);", name, ClassBase.getterName(name, type), def));
-        }
-        else
-        {
-          lines.add(String.format("      this.%s = original.%s().orNull();", name, ClassBase.getterName(name, type), def));
-        }
+        def = def == null ? "null" : def;
+        lines.add(String.format("      this.%s = original.%s().orElse(%s);", name, ClassBase.getterName(name, type), def));
       }
       else
       {
         lines.add(String.format("      this.%s = original.%s();", name, ClassBase.getterName(name, type)));
       }
     }
-    return Joiner.on("\n").join(lines);
+    return Joiner.on(lf()).join(lines);
   }
 
   @ExtensionPoint("builder")

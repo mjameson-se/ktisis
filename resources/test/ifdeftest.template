@@ -1,0 +1,8 @@
+This is without the def
+#ifdef define_me
+This is with the def ${define_me}
+#endif
+This is after the def
+#ifdef second_def
+${second_def}
+#endif

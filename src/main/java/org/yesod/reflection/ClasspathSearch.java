@@ -12,7 +12,17 @@ public class ClasspathSearch
 {
   private Set<ClassInfo> ci = new HashSet<>();
   private Stream<ClassInfo> stream = ci.stream();
-  private final ClassLoader cl = getClass().getClassLoader();
+  private final ClassLoader cl;
+
+  public ClasspathSearch()
+  {
+    this(ClasspathSearch.class.getClassLoader());
+  }
+
+  public ClasspathSearch(ClassLoader classLoader)
+  {
+    this.cl = classLoader;
+  }
 
   public ClasspathSearch includePackage(String packageName) throws IOException
   {

@@ -1,6 +1,5 @@
 package org.yesod.ktisis.base;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Optional;
@@ -12,7 +11,6 @@ import org.yesod.ktisis.VariableResolver;
 import org.yesod.ktisis.base.ExtensionMethod.ExtensionPoint;
 import org.yesod.ktisis.base.FeatureTags.Feature;
 import org.yesod.reflection.ClassStream;
-import org.yesod.reflection.ClasspathSearch;
 import org.yesod.reflection.InterfaceWrapper;
 
 import com.google.common.base.Joiner;
@@ -24,12 +22,6 @@ public class ExtensionRegistry implements TemplatePlugin
   private static final Pattern extensionMatcher = Pattern.compile("^#! \\{(\\S*)\\}\\R{0,1}", Pattern.MULTILINE);
 
   private ListMultimap<String, InterfaceWrapper<ExtensionMethod>> extensionPoints = ArrayListMultimap.create();
-
-  @Deprecated
-  public void loadPackage(String packageName) throws IOException
-  {
-    load(new ClasspathSearch().includePackage(packageName).classStream());
-  }
 
   @Override
   public void load(ClassStream cs)
@@ -43,7 +35,10 @@ public class ExtensionRegistry implements TemplatePlugin
       .<String, ExtensionMethod> asInterface((b) -> b::invoke)
       .forEach((iw) ->
       {
-        extensionPoints.put(iw.getMethod().getAnnotation(ExtensionPoint.class).value(), iw);
+        for (String extPt : iw.getMethod().getAnnotation(ExtensionPoint.class).value())
+        {
+          extensionPoints.put(extPt, iw);
+        }
       });
   }
 
@@ -55,7 +50,7 @@ public class ExtensionRegistry implements TemplatePlugin
     for (InterfaceWrapper<ExtensionMethod> extMethod : extensionPoints.get(extension))
     {
       Optional<Feature> featureOpt = extMethod.getAnnotation(Feature.class);
-      if (featureOpt.isPresent() && !FeatureTags.hasTag(featureOpt.get().value(), variableLookup))
+      if (featureOpt.isPresent() && !FeatureTags.hasTag(featureOpt.get(), variableLookup))
       {
         continue;
       }
@@ -66,7 +61,7 @@ public class ExtensionRegistry implements TemplatePlugin
         builder.add(output);
       }
     }
-    return builder.isEmpty() ? null : Joiner.on('\n').join(builder) + '\n';
+    return builder.isEmpty() ? null : Joiner.on(WhitespaceHelper.lineEnding()).join(builder) + WhitespaceHelper.lineEnding();
   }
 
   @Override

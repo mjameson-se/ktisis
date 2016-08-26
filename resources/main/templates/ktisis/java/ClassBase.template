@@ -1,6 +1,6 @@
 #! {before_class}
 /** ${class_comment} */
-@{class}${scope} class ${name}${super_type_opt}
+@{class}${scope}${class_modifiers} class ${name}${super_type_opt}
 {
 #! {begin_class}
 #! {class_fields}
